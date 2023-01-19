@@ -1,0 +1,90 @@
+//
+//  main.swift
+//  Num11651
+//
+//  Created by 김도형 on 2023/01/14.
+//
+
+import Foundation
+
+final class FileIO {
+    private let buffer:[UInt8]
+    private var index: Int = 0
+
+    init(fileHandle: FileHandle = FileHandle.standardInput) {
+        
+        buffer = Array(try! fileHandle.readToEnd()!)+[UInt8(0)] // 인덱스 범위 넘어가는 것 방지
+    }
+
+    @inline(__always) private func read() -> UInt8 {
+        defer { index += 1 }
+
+        return buffer[index]
+    }
+
+    @inline(__always) func readInt() -> Int {
+        var sum = 0
+        var now = read()
+        var isPositive = true
+
+        while now == 10
+                || now == 32 { now = read() } // 공백과 줄바꿈 무시
+        if now == 45 { isPositive.toggle(); now = read() } // 음수 처리
+        while now >= 48, now <= 57 {
+            sum = sum * 10 + Int(now-48)
+            now = read()
+        }
+
+        return sum * (isPositive ? 1:-1)
+    }
+
+    @inline(__always) func readString() -> String {
+        var now = read()
+
+        while now == 10 || now == 32 { now = read() } // 공백과 줄바꿈 무시
+        let beginIndex = index-1
+
+        while now != 10,
+              now != 32,
+              now != 0 { now = read() }
+
+        return String(bytes: Array(buffer[beginIndex..<(index-1)]), encoding: .ascii)!
+    }
+
+    @inline(__always) func readByteSequenceWithoutSpaceAndLineFeed() -> [UInt8] {
+        var now = read()
+
+        while now == 10 || now == 32 { now = read() } // 공백과 줄바꿈 무시
+        let beginIndex = index-1
+
+        while now != 10,
+              now != 32,
+              now != 0 { now = read() }
+
+        return Array(buffer[beginIndex..<(index-1)])
+    }
+}
+
+let fileIO = FileIO()
+var coordinates = [(x: Int, y: Int)]()
+for _ in 0..<fileIO.readInt() {
+    coordinates.append((fileIO.readInt(), fileIO.readInt()))
+}
+
+coordinates.sort { lhs, rhs in
+    if lhs.y < rhs.y {
+        return true
+    } else if lhs.y == rhs.y {
+        return lhs.x < rhs.x
+    } else {
+        return false
+    }
+}
+
+var result: String = ""
+
+coordinates.forEach { coordinate in
+    result += "\(coordinate.x) \(coordinate.y)\n"
+}
+
+print(result)
